@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <link rel="shortcut icon" href="../assets/Sirius-1.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="star.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Styling for the chat container and messages */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #chat-container {
+            background-color: #0000005a;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 350px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            max-height: 380px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .message {
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            word-wrap: break-word;
+            max-width: 70%;
+        }
+
+        .you {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            align-self: flex-end;
+            border-radius: 8px 8px 0 8px;
+            max-width: 70%;
+        }
+
+        .server {
+            background-color: #f8d7da;
+            color: #721c24;
+            align-self: flex-start;
+            border-radius: 8px 8px 8px 0;
+            max-width: 70%;
+        }
+
+        #message-input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: calc(100% - 1px);
+            box-sizing: border-box;
+        }
+
+        #send-button {
+            padding: 10px;
+            background-color: #0048ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.8s;
+        }
+
+        #send-button:hover {
+            background-color: #00c030;
+        }
+
+        #messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #messages::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+        #messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="night-sky" style="--number-of-stars: 20"></div>
+</body>
+</html>
+<script src="scripts.js"></script>
+
+    </head>
+    <body>
+        <div id="chat-container">
+            <div id="messages"></div> <!-- Area untuk menampilkan pesan -->
+            <div id="input-container">
+                <input type="text" id="message-input" placeholder="Ketik pesan Anda di sini" />
+                <button id="send-button">Kirim</button>
+            </div>
+        </div>
+
+    <script>
+        const socket = new WebSocket('ws://192.168.43.29:3000'); // Menghubungkan ke server WebSocket
+
+        // Ketika terhubung ke server
+        socket.onopen = () => {
+            console.log('Connected to the WebSocket server');
+        };
+
+        // Ketika menerima pesan dari server
+        socket.onmessage = async (event) => {
+            const encryptedMessage = event.data;
+            const decryptedMessage = await decryptMessage(encryptedMessage); // Dekripsi pesan yang diterima
+            const messagesDiv = document.getElementById('messages');
+            const messageElem = document.createElement('div');
+            messageElem.classList.add('message', 'server');
+            messageElem.innerHTML = `<div class="message-content">${decryptedMessage}</div>`;
+            messagesDiv.appendChild(messageElem);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll otomatis ke bawah
+        };
+        
+        // Fungsi untuk mengenkripsi pesan
+        function encryptMessage(message) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const crypto = window.crypto || window.msCrypto;
+                    const encoder = new TextEncoder();
+                    const key = encoder.encode('12345678901234567890123456789012');  // Kunci yang sama
+                    const iv = encoder.encode('1234567890123456');  // IV yang sama
+
+                    const data = encoder.encode(message);
+
+                    crypto.subtle.importKey(
+                        'raw', key, { name: 'AES-CBC' }, false, ['encrypt']
+                    ).then(cryptoKey => {
+                        // Enkripsi pesan
+                        crypto.subtle.encrypt({ name: 'AES-CBC', iv: iv }, cryptoKey, data).then(encrypted => {
+                            const encryptedArray = new Uint8Array(encrypted);
+                            let encryptedHex = '';
+                            encryptedArray.forEach(byte => {
+                                encryptedHex += byte.toString(16).padStart(2, '0');
+                            });
+                            resolve(encryptedHex);
+                        }).catch(err => reject('Error during encryption: ' + err));
+                    }).catch(err => reject('Error importing key: ' + err));
+                } catch (error) {
+                    reject('Encryption failed: ' + error);
+                }
+            });
+        }
+
+        // Fungsi untuk mendekripsi pesan
+        function decryptMessage(encryptedMessage) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const crypto = window.crypto || window.msCrypto;
+                    const decoder = new TextDecoder();
+                    const key = new TextEncoder().encode('12345678901234567890123456789012'); // Kunci yang sama
+                    const iv = new TextEncoder().encode('1234567890123456');  // IV yang sama
+
+                    const encryptedArray = new Uint8Array(encryptedMessage.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    crypto.subtle.importKey(
+                        'raw', key, { name: 'AES-CBC' }, false, ['decrypt']
+                    ).then(cryptoKey => {
+                        // Dekripsi pesan
+                        crypto.subtle.decrypt({ name: 'AES-CBC', iv: iv }, cryptoKey, encryptedArray).then(decrypted => {
+                            const decryptedMessage = decoder.decode(decrypted);
+                            resolve(decryptedMessage);
+                        }).catch(err => reject('Error during decryption: ' + err));
+                    }).catch(err => reject('Error importing key: ' + err));
+                } catch (error) {
+                    reject('Decryption failed: ' + error);
+                }
+            });
+        }
+
+        // Fungsi untuk mengirim pesan
+        document.getElementById('message-input').addEventListener('keydown', async (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Mencegah newline di input
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+
+            if (message) {
+                try {
+                    const encryptedMessage = await encryptMessage(message);
+                    socket.send(encryptedMessage); // Kirim pesan terenkripsi ke server
+
+                    const messagesDiv = document.getElementById('messages');
+                    const messageElem = document.createElement('div');
+                    messageElem.classList.add('message', 'you');
+                    messageElem.innerHTML = `<div class="message-content">You: ${message}</div>`;
+                    messagesDiv.appendChild(messageElem);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll otomatis ke bawah
+                    messageInput.value = ''; // Kosongkan input setelah mengirim
+                } catch (error) {
+                    console.error('Encryption failed:', error);
+                }
+            }
+        }
+        });
+
+
+
+        // Menangani error dan koneksi terputus
+        socket.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+        };
+        
+        socket.onclose = () => {
+            console.log('Disconnected from the WebSocket server');
+        };
+    </script>
+</body>
+</html>

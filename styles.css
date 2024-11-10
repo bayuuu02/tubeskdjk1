@@ -1,0 +1,123 @@
+
+/* Container for chat */
+#chat-container {
+    background-color: #00000085;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 350px;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Messages area */
+#messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: rgb(250, 250, 250);
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    max-height: 380px;
+    box-sizing: border-box;
+    font-size: 14px;
+    animation: changeBackgroundColor 8s infinite alternate; /* Menambahkan animasi */
+}
+
+/* Animasi perubahan warna background */
+@keyframes changeBackgroundColor {
+    10% { background-color: rgb(251, 0, 255); }  
+}
+
+
+/* Individual message styles */
+.message {
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    word-wrap: break-word;
+    max-width: 70%;
+}
+
+/* Styling for sender's message */
+.you {
+    background-color: rgb(209, 236, 241);
+    color: rgb(12, 84, 96);
+    align-self: flex-end;
+    border-radius: 8px 8px 0 8px;
+    max-width: 70%;
+    animation: changeMessageColorYou 5s infinite alternate;
+}
+
+/* Styling for server's message */
+.server {
+    background-color: rgb(248, 215, 218);
+    color: rgb(114, 28, 36);
+    align-self: flex-start;
+    border-radius: 8px 8px 8px 0;
+    max-width: 70%;
+    animation: changeMessageColorServer 5s infinite alternate;
+}
+
+/* Animasi perubahan warna untuk pesan pengirim (You) */
+@keyframes changeMessageColorYou {
+    0% { background-color: rgb(209, 236, 241); } /* Biru lembut */
+    50% { background-color: rgb(123, 204, 255); } /* Biru muda */
+    100% { background-color: rgb(0, 150, 255); } /* Biru gelap */
+}
+
+
+/* Animasi perubahan warna untuk pesan server */
+@keyframes changeMessageColorServer {
+    0% { background-color: rgb(248, 215, 218); }  /* Merah lembut */
+    50% { background-color: rgb(255, 175, 175); }  /* Merah sedang */
+    100% { background-color: rgb(255, 75, 75); }  /* Merah terang */
+}
+
+
+/* Input field */
+#message-input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    width: calc(100% - 1px);
+    box-sizing: border-box;
+}
+
+/* Send button */
+#send-button {
+    padding: 10px;
+    background-color: rgb(0, 255, 0);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+    animation: changeButtonColor 5s infinite alternate;
+}
+
+/* Hover effect for send button */
+#send-button:hover {
+    background-color: rgb(0, 86, 179);
+}
+
+/* Scrollbar styling */
+#messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background: rgb(204, 204, 204);
+    border-radius: 10px;
+}
+
+#messages::-webkit-scrollbar-track {
+    background: rgb(241, 241, 241);
+}
+
+
